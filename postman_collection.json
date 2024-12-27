@@ -1,0 +1,214 @@
+{
+	"info": {
+		"_postman_id": "16d271bb-e283-4e95-8aea-4d6a83bb1fd2",
+		"name": "supono-backend-task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "11043766"
+	},
+	"item": [
+		{
+			"name": "Generate-User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"const email = response.user.email;",
+							"const randomPassword = response.user.randomPassword;",
+							"",
+							"if (email && randomPassword) {",
+							"    pm.environment.set('email', `${email}`);",
+							"    pm.environment.set('randomPassword', `${randomPassword}`);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": "JSON Type",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"role\": \"admin\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/generate-user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"generate-user"
+					]
+				},
+				"description": "This request generates a new user with a specified role (either \"admin\" or \"user\").\nAfter the user is successfully created, the email and random password of the newly generated user will be extracted from the response and saved as environment variables.\n\n**Response Example:**\n{\n    \"message\": \"User generated successfully\",\n    \"user\": {\n        \"uid\": \"some-uid\",\n        \"email\": \"user_random-uuid@example.com\",\n        \"randomPassword\": \"random-password-uuid\"\n    }\n}\n\nThese values will be saved as:\n- `email` (for login or further actions)\n- `randomPassword` (for login or further actions)\n"
+			},
+			"response": []
+		},
+		{
+			"name": "Sign-In",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"const idToken = response.idToken;",
+							"",
+							"if (idToken) {",
+							"    pm.environment.set('idToken', `${idToken}`);",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": "JSON Type",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{randomPassword}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/sign-in",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"sign-in"
+					]
+				},
+				"description": "This request allows a user to sign in by providing their email and password. It interacts with Firebase Authentication using the Firebase REST API to authenticate the user.\n\n**Request Body:**\n- `email` (string): The email address of the user.\n- `password` (string): The password of the user.\n\nIf the authentication is successful, the response will contain an `idToken` and a `customToken`:\n- `idToken` (string): The Firebase Authentication ID token to be used for authenticated requests.\n- `customToken` (string): A custom Firebase token that can be used in your application.\n\n**Response Example:**\n{\n    \"message\": \"Sign-in successful\",\n    \"idToken\": \"some-id-token\",\n    \"customToken\": \"some-custom-token\"\n}\n\nAfter a successful sign-in, the `idToken` will be saved as an environment variable named `idToken`, which can be used in subsequent requests for authentication.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Image Better Quality",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{idToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": "JSON Type",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"imageUrl\": \"https://images.squarespace-cdn.com/content/v1/61c4da8eb1b30a201b9669f2/e2e0e62f-0064-4f86-b9d8-5a55cb7110ca/Korembi-January-2024.jpg\",\n  \"effect\": \"grayscale\",\n  \"apiType\": \"best\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/generateImage",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"generateImage"
+					]
+				},
+				"description": "This request allows you to apply the \"best\" image effect to an image provided via the `imageUrl`. The effect applied is based on the `effect` parameter, which specifies how the image should be modified (e.g., contrast, brightness, etc.). The request requires the following body parameters:\n\n**Request Body:**\n- `imageUrl` (string): The URL of the image to apply the effect to.\n- `effect` (string): The effect you want to apply (e.g., \"vivid\", \"enhance\", etc.).\n- `apiType` (string): Must be `\"best\"` to apply the \"best\" image effect.\n\n**Response Example:**\n{\n    \"success\": true,\n    \"data\": \"new-image-url-after-best-effect\"\n}\n\n**Note:**\n- If the `apiType` is set to `\"best\"`, the request will trigger the best possible effect, optimizing the image to its maximum enhancement.\n- The resulting image URL will be returned, and the image details will be saved in the Firestore database with user information.\n"
+			},
+			"response": []
+		},
+		{
+			"name": "Generate Image Low Quality",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{idToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": "JSON Type",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"imageUrl\": \"https://images.squarespace-cdn.com/content/v1/61c4da8eb1b30a201b9669f2/e2e0e62f-0064-4f86-b9d8-5a55cb7110ca/Korembi-January-2024.jpg\",\n  \"effect\": \"sepia\",\n  \"apiType\": \"worst\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/generateImage",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"generateImage"
+					]
+				},
+				"description": "This request allows you to apply the \"worst\" image effect to an image provided via the `imageUrl`. The effect applied is based on the `effect` parameter, which specifies how the image should be degraded (e.g., low resolution, pixelation, etc.). The request requires the following body parameters:\n\n**Request Body:**\n- `imageUrl` (string): The URL of the image to apply the effect to.\n- `effect` (string): The effect you want to apply (e.g., \"pixelate\", \"blur\", etc.).\n- `apiType` (string): Must be `\"worst\"` to apply the \"worst\" image effect.\n\n**Response Example:**\n{\n    \"success\": true,\n    \"data\": \"new-image-url-after-worst-effect\"\n}\n\n**Note:**\n- If the `apiType` is set to `\"worst\"`, the request will apply the worst possible effect, intentionally degrading the image quality.\n- The resulting image URL will be returned, and the image details will be saved in the Firestore database with user information.\n"
+			},
+			"response": []
+		}
+	]
+}
